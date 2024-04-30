@@ -1,0 +1,49 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  mongo:
+    container_name: db_container
+    image: mongo:latest
+    restart: always
+    networks:
+      - my_network
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - 27017:27017
+
+  server:
+    container_name: quiz-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - my_network
+    environment:
+      JWT_SECRET: /run/secrets/jwt-secret
+    depends_on:
+      - mongo
+    secrets:
+      - jwt-secret
+    ports:
+      - 3001:3001
+    volumes:
+      - ./:/app
+volumes:
+  mongodb_data:
+secrets:
+  jwt-secret:
+    file: secrets/jwt.txt
